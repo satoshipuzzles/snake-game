@@ -1,4 +1,3 @@
-_app.js
 
 import '../styles/globals.css';
 

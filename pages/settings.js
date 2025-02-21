@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import axios from 'axios';
 import QRCode from 'qrcode';
 
-// ✅ Prevent SSR on WalletConnect
+// ✅ Lazy load WalletConnect to prevent SSR issues
 const WalletConnect = dynamic(() => import('../components/WalletConnect'), { ssr: false });
 
 const Settings = () => {
@@ -16,17 +16,20 @@ const Settings = () => {
   const [snakes, setSnakes] = useState([]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return; // ✅ Prevents execution on the server
+    if (typeof window === "undefined") return; // ✅ Prevents SSR execution
 
     async function load() {
       try {
-        const { getUserKeypair, getProfile } = await import('../lib/nostr'); // ✅ Dynamically import nostr-related functions
+        const { getUserKeypair, getProfile } = await import('../lib/nostr'); // ✅ Lazy import
 
-        const keypair = getUserKeypair();
-        if (keypair) {
-          const prof = await getProfile(keypair.pubkey);
-          setProfile(prof);
+        let keypair = getUserKeypair();
+        if (!keypair) {
+          console.warn("No keypair found, defaulting to guest");
+          keypair = { pubkey: "Guest" }; // ✅ Prevents null errors
         }
+
+        const prof = await getProfile(keypair.pubkey);
+        setProfile(prof);
 
         setWalletConnected(!!localStorage.getItem('walletLnurl'));
         setSnakes(JSON.parse(localStorage.getItem('unlockedSnakes')) || ['default']);
@@ -50,7 +53,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="container">
+    <div className="container dark-theme"> {/* ✅ Dark theme applied */}
       <div className="header">
         <h1>Settings</h1>
       </div>
@@ -88,5 +91,5 @@ const Settings = () => {
   );
 };
 
-// ✅ Fully disables SSR for this page
+// ✅ Fully disable SSR for this page
 export default dynamic(() => Promise.resolve(Settings), { ssr: false });

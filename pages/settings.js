@@ -1,35 +1,52 @@
-settings.js
-
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { getUserKeypair, getProfile } from '../lib/nostr';
-import WalletConnect from '../components/WalletConnect';
+import dynamic from 'next/dynamic';
 import axios from 'axios';
 import QRCode from 'qrcode';
 
-export default function Settings() {
+// ✅ Prevent SSR on WalletConnect
+const WalletConnect = dynamic(() => import('../components/WalletConnect'), { ssr: false });
+
+const Settings = () => {
   const router = useRouter();
   const [profile, setProfile] = useState(null);
   const [walletConnected, setWalletConnected] = useState(false);
   const [invoice, setInvoice] = useState(null);
   const [qrCode, setQrCode] = useState(null);
-  const [snakes, setSnakes] = useState(JSON.parse(localStorage.getItem('unlockedSnakes')) || ['default']);
+  const [snakes, setSnakes] = useState([]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return; // ✅ Prevents execution on the server
+
     async function load() {
-      const keypair = getUserKeypair();
-      const prof = await getProfile(keypair.pubkey);
-      setProfile(prof);
-      setWalletConnected(!!localStorage.getItem('walletLnurl'));
+      try {
+        const { getUserKeypair, getProfile } = await import('../lib/nostr'); // ✅ Dynamically import nostr-related functions
+
+        const keypair = getUserKeypair();
+        if (keypair) {
+          const prof = await getProfile(keypair.pubkey);
+          setProfile(prof);
+        }
+
+        setWalletConnected(!!localStorage.getItem('walletLnurl'));
+        setSnakes(JSON.parse(localStorage.getItem('unlockedSnakes')) || ['default']);
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      }
     }
+
     load();
   }, []);
 
   const createInvoice = async () => {
-    const res = await axios.post('/api/invoice', { amount: 100 });
-    setInvoice(res.data.payment_request);
-    const qr = await QRCode.toDataURL(res.data.payment_request);
-    setQrCode(qr);
+    try {
+      const res = await axios.post('/api/invoice', { amount: 100 });
+      setInvoice(res.data.payment_request);
+      const qr = await QRCode.toDataURL(res.data.payment_request);
+      setQrCode(qr);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+    }
   };
 
   return (
@@ -69,4 +86,7 @@ export default function Settings() {
       <button onClick={() => router.push('/')}>Back</button>
     </div>
   );
-}
+};
+
+// ✅ Fully disables SSR for this page
+export default dynamic(() => Promise.resolve(Settings), { ssr: false });

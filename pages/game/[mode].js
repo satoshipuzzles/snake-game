@@ -4,26 +4,29 @@ import dynamic from 'next/dynamic';
 import GameCanvas from '../../components/GameCanvas';
 import { loginWithNostr, loginAsGuest, getUserKeypair } from '../../lib/nostr';
 
-// Prevent server-side rendering (SSR)
 const Game = () => {
   const router = useRouter();
-  const { mode } = router.query;
   const [user, setUser] = useState(null);
+  const [mode, setMode] = useState(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return; // Prevents SSR
+
+    if (router.query.mode) {
+      setMode(router.query.mode);
+    }
+
     async function init() {
-      if (typeof window !== "undefined") { // ✅ Ensures code only runs on the client
-        let keypair = getUserKeypair();
-        if (!keypair) {
-          if (window.nostr) await loginWithNostr();
-          else await loginAsGuest();
-          keypair = getUserKeypair();
-        }
-        setUser(keypair);
+      let keypair = getUserKeypair();
+      if (!keypair) {
+        if (window.nostr) await loginWithNostr();
+        else await loginAsGuest();
+        keypair = getUserKeypair();
       }
+      setUser(keypair);
     }
     init();
-  }, []);
+  }, [router.query.mode]);
 
   if (!mode || !user) return <div>Loading...</div>;
 
@@ -39,5 +42,5 @@ const Game = () => {
   );
 };
 
-// ✅ This prevents Next.js from rendering this page on the server
+// ✅ Fully disable server-side rendering (SSR)
 export default dynamic(() => Promise.resolve(Game), { ssr: false });

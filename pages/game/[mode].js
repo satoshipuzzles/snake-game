@@ -8,9 +8,14 @@ const Game = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [mode, setMode] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return; // Prevents SSR
+    setIsClient(true); // ✅ Ensures this component only renders on the client
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || typeof window === "undefined") return; // ✅ Prevents SSR execution
 
     if (router.query.mode) {
       setMode(router.query.mode);
@@ -26,9 +31,9 @@ const Game = () => {
       setUser(keypair);
     }
     init();
-  }, [router.query.mode]);
+  }, [router.query.mode, isClient]);
 
-  if (!mode || !user) return <div>Loading...</div>;
+  if (!isClient || !mode || !user) return <div>Loading...</div>;
 
   return (
     <div className="container">
@@ -42,5 +47,5 @@ const Game = () => {
   );
 };
 
-// ✅ Fully disable server-side rendering (SSR)
+// ✅ Fully disable SSR (Next.js will never render this on the server)
 export default dynamic(() => Promise.resolve(Game), { ssr: false });

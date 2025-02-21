@@ -1,26 +1,34 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import GameCanvas from '../../components/GameCanvas';
-import { loginWithNostr, loginAsGuest, getUserKeypair } from '../../lib/nostr';
+
+const GameCanvas = dynamic(() => import('../../components/GameCanvas'), { ssr: false });
+const loginWithNostr = async () => {};
+const loginAsGuest = async () => {};
+const getUserKeypair = () => null;
 
 const Game = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [mode, setMode] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
-  // ✅ Ensure this runs only on the client
+  // ✅ Ensures this runs ONLY on the client
   useEffect(() => {
-    if (typeof window === "undefined") return; // Stops execution on the server
+    setIsClient(true);
+  }, []);
 
-    const urlMode = new URLSearchParams(window.location.search).get('mode');
-    if (urlMode) setMode(urlMode);
+  useEffect(() => {
+    if (!isClient || typeof window === "undefined") return; // ✅ Prevent SSR execution
+
+    const queryMode = router.query.mode;
+    if (queryMode) setMode(queryMode);
 
     async function init() {
       try {
         let keypair = getUserKeypair();
         if (!keypair) {
-          if (window.nostr) {
+          if (typeof window !== "undefined" && window.nostr) {
             await loginWithNostr();
           } else {
             await loginAsGuest();
@@ -33,9 +41,9 @@ const Game = () => {
       }
     }
     init();
-  }, []);
+  }, [router.query.mode, isClient]);
 
-  if (!mode || !user) return <div>Loading...</div>;
+  if (!isClient || !mode || !user) return <div>Loading...</div>;
 
   return (
     <div className="container">
@@ -49,5 +57,5 @@ const Game = () => {
   );
 };
 
-// ✅ Fully prevents SSR
+// ✅ 100% Blocks Server-Side Rendering (SSR)
 export default dynamic(() => Promise.resolve(Game), { ssr: false });

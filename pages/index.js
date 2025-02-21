@@ -1,7 +1,8 @@
-index.js
-
 import { useRouter } from 'next/router';
-import Profile from '../components/Profile';
+import dynamic from 'next/dynamic';
+
+// ✅ Ensure Profile is only loaded on the client
+const Profile = dynamic(() => import('../components/Profile'), { ssr: false });
 
 export default function Home() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function Home() {
     <div className="container">
       <div className="header">
         <h1>Ultimate Snake</h1>
-        <Profile />
+        <Profile /> {/* ✅ Profile is now client-only */}
       </div>
       {gameModes.map(({ mode, title, img }) => (
         <div key={mode} className="card" onClick={() => router.push(`/game/${mode}`)}>
@@ -27,3 +28,6 @@ export default function Home() {
     </div>
   );
 }
+
+// ✅ Fully disable SSR
+export default dynamic(() => Promise.resolve(Home), { ssr: false });

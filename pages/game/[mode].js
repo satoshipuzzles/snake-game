@@ -11,24 +11,32 @@ const Game = () => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true); // ✅ Ensures this component only renders on the client
+    setIsClient(true); // ✅ Ensures this runs only on the client
   }, []);
 
   useEffect(() => {
-    if (!isClient || typeof window === "undefined") return; // ✅ Prevents SSR execution
+    if (!isClient) return; // ✅ Ensures SSR never runs this code
+    if (typeof window === "undefined") return; // ✅ Double-checks it's client-side
 
     if (router.query.mode) {
       setMode(router.query.mode);
     }
 
     async function init() {
-      let keypair = getUserKeypair();
-      if (!keypair) {
-        if (window.nostr) await loginWithNostr();
-        else await loginAsGuest();
-        keypair = getUserKeypair();
+      try {
+        let keypair = getUserKeypair();
+        if (!keypair) {
+          if (window.nostr) {
+            await loginWithNostr();
+          } else {
+            await loginAsGuest();
+          }
+          keypair = getUserKeypair();
+        }
+        setUser(keypair);
+      } catch (error) {
+        console.error("Error initializing Nostr:", error);
       }
-      setUser(keypair);
     }
     init();
   }, [router.query.mode, isClient]);
@@ -47,5 +55,5 @@ const Game = () => {
   );
 };
 
-// ✅ Fully disable SSR (Next.js will never render this on the server)
+// ✅ Completely disables SSR
 export default dynamic(() => Promise.resolve(Game), { ssr: false });

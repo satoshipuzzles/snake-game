@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import GameCanvas from '../../components/GameCanvas';
 import { loginWithNostr, loginAsGuest, getUserKeypair } from '../../lib/nostr';
 
@@ -10,13 +11,15 @@ export default function Game() {
 
   useEffect(() => {
     async function init() {
-      let keypair = getUserKeypair();
-      if (!keypair) {
-        if (window.nostr) await loginWithNostr();
-        else await loginAsGuest();
-        keypair = getUserKeypair();
+      if (typeof window !== "undefined") { // ✅ Prevents server-side errors
+        let keypair = getUserKeypair();
+        if (!keypair) {
+          if (window.nostr) await loginWithNostr();
+          else await loginAsGuest();
+          keypair = getUserKeypair();
+        }
+        setUser(keypair);
       }
-      setUser(keypair);
     }
     init();
   }, []);

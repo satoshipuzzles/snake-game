@@ -8,19 +8,13 @@ const Game = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [mode, setMode] = useState(null);
-  const [isClient, setIsClient] = useState(false);
 
+  // ✅ Ensure this runs only on the client
   useEffect(() => {
-    setIsClient(true); // ✅ Ensures this runs only on the client
-  }, []);
+    if (typeof window === "undefined") return; // Stops execution on the server
 
-  useEffect(() => {
-    if (!isClient) return; // ✅ Ensures SSR never runs this code
-    if (typeof window === "undefined") return; // ✅ Double-checks it's client-side
-
-    if (router.query.mode) {
-      setMode(router.query.mode);
-    }
+    const urlMode = new URLSearchParams(window.location.search).get('mode');
+    if (urlMode) setMode(urlMode);
 
     async function init() {
       try {
@@ -39,9 +33,9 @@ const Game = () => {
       }
     }
     init();
-  }, [router.query.mode, isClient]);
+  }, []);
 
-  if (!isClient || !mode || !user) return <div>Loading...</div>;
+  if (!mode || !user) return <div>Loading...</div>;
 
   return (
     <div className="container">
@@ -55,5 +49,5 @@ const Game = () => {
   );
 };
 
-// ✅ Completely disables SSR
+// ✅ Fully prevents SSR
 export default dynamic(() => Promise.resolve(Game), { ssr: false });

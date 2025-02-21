@@ -4,14 +4,15 @@ import dynamic from 'next/dynamic';
 import GameCanvas from '../../components/GameCanvas';
 import { loginWithNostr, loginAsGuest, getUserKeypair } from '../../lib/nostr';
 
-export default function Game() {
+// Prevent server-side rendering (SSR)
+const Game = () => {
   const router = useRouter();
   const { mode } = router.query;
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     async function init() {
-      if (typeof window !== "undefined") { // ✅ Prevents server-side errors
+      if (typeof window !== "undefined") { // ✅ Ensures code only runs on the client
         let keypair = getUserKeypair();
         if (!keypair) {
           if (window.nostr) await loginWithNostr();
@@ -36,4 +37,7 @@ export default function Game() {
       <button onClick={() => router.push('/')}>Back to Home</button>
     </div>
   );
-}
+};
+
+// ✅ This prevents Next.js from rendering this page on the server
+export default dynamic(() => Promise.resolve(Game), { ssr: false });

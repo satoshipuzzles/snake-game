@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 // ✅ Ensure Profile is only loaded on the client
 const Profile = dynamic(() => import('../components/Profile'), { ssr: false });
 
-export default function Home() {
+const Home = () => {
   const router = useRouter();
 
   const gameModes = [
@@ -27,7 +27,7 @@ export default function Home() {
       ))}
     </div>
   );
-}
+};
 
-// ✅ Fully disable SSR
+// ✅ Fix: Ensure we only have ONE default export
 export default dynamic(() => Promise.resolve(Home), { ssr: false });

@@ -119,3 +119,46 @@ button:hover {
   color: var(--text-color);
   margin-top: 20px;
 }
+
+/* ✅ Profile Component */
+.profile-container {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--accent-color);
+  transition: transform 0.2s ease;
+}
+
+.profile-pic:hover {
+  transform: scale(1.1);
+}
+
+.profile-loading {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid var(--accent-color);
+}
+
+.profile-error {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--card-bg);
+  border-radius: 50%;
+  padding: 2px;
+  font-size: 12px;
+  cursor: help;
+  border: 1px solid var(--accent-color);
+}

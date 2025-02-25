@@ -1,18 +1,7 @@
 {
   "name": "snake-game",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
+  "version": "1.0.0",
   "dependencies": {
-    "next": "latest",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "nostr-tools": "1.17.0",
-    "axios": "^1.6.0",
-    "qrcode": "^1.5.3"
+    "nostr-tools": "^1.17.0"
   }
 }
